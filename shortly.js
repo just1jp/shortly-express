@@ -17,7 +17,10 @@ var app = express();
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
+/************************************************************/
 // Middleware
+/************************************************************/
+
 app.use(partials());
 // Parse JSON (uniform resource locators)
 app.use(bodyParser.json());
@@ -32,13 +35,30 @@ app.use(sessions({
   activeDuration: 5 * 60 * 1000
 }));
 
+// Investigate how this is working a bit better
+app.use(function(req, res, next) {
+  if (req.session && req.session.user) {
+    new User({username: req.session.user}).fetch().then(function(user) { 
+      next();
+    }).catch(function(err) {
+      res.redirect('/signup');
+    });
+  }
+});
+
+
+/************************************************************/
+// Routing
+/************************************************************/
 
 app.get('/', function(req, res) {
   res.render('index');
 });
 
 app.get('/login', function(req, res) {
-  res.render('login');
+  if (req.session.user) {
+    res.render('/');
+  }
 });
 
 app.get('/signup', function(req, res) {
@@ -85,6 +105,7 @@ app.post('/login', function(req, res) {
       bcrypt.compare(req.body.password, user.attributes.password, function(err, result) {
         if (result) {
           console.log('Password is correct');
+          req.session.user = user;
           res.redirect('/');
         } else {
           console.log('Password doesn\'t match');
