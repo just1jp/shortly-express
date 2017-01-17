@@ -24,15 +24,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
-app.get('/', 
-function(req, res) {
+app.get('/', function(req, res) {
   res.render('login');
 });
-
-// app.get('/', 
-// function(req, res) {
-//   res.render('index');
-// });
 
 app.get('/create', 
 function(req, res) {
@@ -100,28 +94,31 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
-// var authorize = function(req, res, callback) {
-//   Users.findOne({username: username}, function (err, user) {
-//     if (!user) {
-//       res.render('/login', { error: 'Invalid email' });
-//     } else {
-//       if (req.body.password === user.password) {
-//         req.session.user = user;
-//         res.redirect('/');
-//       } else {
-//         res.render('/login', { error: 'Invalid email or password' });
-//       }
-//     }
-//   });
-// };
+var authorize = function(req, res) {
+  new User({username: req.body.username}).fetch().then(function(err, model) {
+    if (err) {
+      console.log('User doesnt exist');
+      res.redirect('/signup');
+    } else {
+      bcrypt.hash(password, 10, function(err, hash) {
+        if (err) {
+          console.log(err);
+        }
+        if (req.body.password === hash) {
+          console.log('matches');
+          req.session.user = {user: req.body.username};
+          // NEED TO ADD NEXT()
+          res.redirect('/');
+        } else {
+          console.log('Password doesnt match');
+          res.redirect('/login');
+        }
 
-// Users.fetch({id: 4}).then(function(model) {
-//   console.log(model);
-// });
+      });
+    }
+  });
+};
 
-new User({username: 'itsme'}).fetch().then(function(model) {
-  console.log(model.attributes.password);
-});
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
