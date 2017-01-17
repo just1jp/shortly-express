@@ -3,6 +3,7 @@ var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var bcrypt = require('bcrypt');
+var auth = require('express-session');
 
 
 var db = require('./app/config');
@@ -11,7 +12,6 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
-var Users = require('./app/models/user');
 
 var app = express();
 
@@ -54,13 +54,13 @@ app.post('/login', function(req, res) {
     if (err) {
       console.log(err);
     }
-    var newUser = new Users({
+    var newUser = new User({
       username: username,
-      password: password
+      password: hash
     });
     newUser.save();
     res.sendStatus(201);
-    res.end(JSON.stringify('Added username: ' + username));
+    res.end();
   });
 });
 
@@ -100,7 +100,28 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
+// var authorize = function(req, res, callback) {
+//   Users.findOne({username: username}, function (err, user) {
+//     if (!user) {
+//       res.render('/login', { error: 'Invalid email' });
+//     } else {
+//       if (req.body.password === user.password) {
+//         req.session.user = user;
+//         res.redirect('/');
+//       } else {
+//         res.render('/login', { error: 'Invalid email or password' });
+//       }
+//     }
+//   });
+// };
 
+// Users.fetch({id: 4}).then(function(model) {
+//   console.log(model);
+// });
+
+new User({username: 'itsme'}).fetch().then(function(model) {
+  console.log(model.attributes.password);
+});
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
