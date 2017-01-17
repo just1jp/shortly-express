@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var bcrypt = require('bcrypt');
 
 
 var db = require('./app/config');
@@ -10,6 +11,7 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
+var Users = require('./app/models/user');
 
 var app = express();
 
@@ -22,11 +24,15 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
-
 app.get('/', 
 function(req, res) {
-  res.render('index');
+  res.render('login');
 });
+
+// app.get('/', 
+// function(req, res) {
+//   res.render('index');
+// });
 
 app.get('/create', 
 function(req, res) {
@@ -37,6 +43,24 @@ app.get('/links',
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.status(200).send(links.models);
+  });
+});
+
+app.post('/login', function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+
+  bcrypt.hash(password, 10, function(err, hash) {
+    if (err) {
+      console.log(err);
+    }
+    var newUser = new Users({
+      username: username,
+      password: password
+    });
+    newUser.save();
+    res.sendStatus(201);
+    res.end(JSON.stringify('Added username: ' + username));
   });
 });
 
